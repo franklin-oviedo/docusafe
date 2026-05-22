@@ -10,6 +10,11 @@ export default function PWARegister() {
 
     const registerSw = async () => {
       try {
+        const swResponse = await fetch("/sw.js", { cache: "no-store" });
+        if (!swResponse.ok) {
+          return;
+        }
+
         await navigator.serviceWorker.register("/sw.js", { scope: "/" });
       } catch (error) {
         console.error("SW registration failed", error);

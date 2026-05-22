@@ -10,6 +10,7 @@ import {
 import { auth } from "./config";
 
 const googleProvider = new GoogleAuthProvider();
+const NOOP_UNSUBSCRIBE = () => {};
 
 const getClientAuth = () => {
   if (!auth) {
@@ -28,9 +29,11 @@ export const loginWithGoogle = async () => {
 export const loginWithGoogleRedirect = () =>
   signInWithRedirect(getClientAuth(), googleProvider);
 
-export const resolveGoogleRedirect = () => getRedirectResult(getClientAuth());
+export const resolveGoogleRedirect = () =>
+  auth ? getRedirectResult(auth) : Promise.resolve(null);
 
-export const signOut = () => firebaseSignOut(getClientAuth());
+export const signOut = () =>
+  auth ? firebaseSignOut(auth) : Promise.resolve();
 
 export const onAuthChange = (callback: (user: User | null) => void) =>
-  onAuthStateChanged(getClientAuth(), callback);
+  auth ? onAuthStateChanged(auth, callback) : (callback(null), NOOP_UNSUBSCRIBE);
