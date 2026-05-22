@@ -11,10 +11,19 @@ export default function LoginPageClient() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    void resolveGoogleRedirect().catch((error) => {
-      console.error("Google redirect resolution failed", error);
-    });
-  }, []);
+    const syncRedirectResult = async () => {
+      try {
+        const result = await resolveGoogleRedirect();
+        if (result?.user) {
+          router.replace("/dashboard");
+        }
+      } catch (error) {
+        console.error("Google redirect resolution failed", error);
+      }
+    };
+
+    void syncRedirectResult();
+  }, [router]);
 
   useEffect(() => {
     if (!loading && user) router.replace("/dashboard");
