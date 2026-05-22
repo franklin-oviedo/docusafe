@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { FirebaseError } from "firebase/app";
-import { loginWithGoogleRedirect } from "@/lib/firebase/auth";
+import { loginWithGoogle, loginWithGoogleRedirect } from "@/lib/firebase/auth";
+import { useAuthStore } from "@/store/authStore";
 
 const getGoogleErrorMessage = (err: unknown) => {
   const code = (err as FirebaseError | undefined)?.code;
@@ -35,6 +37,8 @@ const GoogleIcon = () => (
 );
 
 export default function LoginForm() {
+  const router = useRouter();
+  const { setUser, setLoading } = useAuthStore();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,10 +46,20 @@ export default function LoginForm() {
     setIsLoading(true);
     setError("");
     try {
-      await loginWithGoogleRedirect();
+      const user = await loginWithGoogle();
+      setUser(user);
+      setLoading(false);
+      router.replace("/dashboard");
       return;
     } catch (err) {
       console.error("Google sign-in failed", err);
+      const code = (err as FirebaseError | undefined)?.code;
+
+      if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+        await loginWithGoogleRedirect();
+        return;
+      }
+
       setError(getGoogleErrorMessage(err));
     } finally {
       setIsLoading(false);
